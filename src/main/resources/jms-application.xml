@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<beans xmlns="http://www.springframework.org/schema/beans"  
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+       xsi:schemaLocation="  
+        http://www.springframework.org/schema/beans  
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+        
+   <!-- Spring提供的JMS工具类，它可以进行消息发送、接收等 -->
+   <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+    	<property name="connectionFactory" ref="connectionFactory"/>
+    	<!-- 队列目的地 -->
+    	<property name="defaultDestination" ref="sendMessageQueue"/> 
+   </bean>
+   
+   <!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供 -->
+   <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+    	<!-- ActiveMQ服务地址 -->  
+	     <property name="brokerURL" value="${mq.brokerURL}"/>
+	     <property name="userName" value="${mq.userName}"/>  
+	     <property name="password" value="${mq.password}"/>
+   </bean>
+        
+    <!-- 队列目的地-->  
+    <bean id="sendMessageQueue" class="org.apache.activemq.command.ActiveMQQueue">  
+        <constructor-arg index="0" value="${movie.queueName}"/>  
+    </bean>
+    
+    <!-- 消息监听器 -->
+    <bean id="sendMessageListener" class="com.miss.cloud.microservicesimplecomsumermovie.jms.listener.SendMessageListener"/>
+    
+    <!-- 消息监听容器 -->
+    <bean id="listenerContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">  
+        <property name="connectionFactory" ref="connectionFactory"/>  
+        <property name="destination" ref="sendMessageQueue"/>
+        <property name="messageListener" ref="sendMessageListener"/>  
+	</bean>
+        
+</beans>
